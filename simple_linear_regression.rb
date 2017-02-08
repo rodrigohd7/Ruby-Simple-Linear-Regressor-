@@ -2,15 +2,13 @@ require 'csv'
 require 'pry'
 
 def cost_function(m, b, points)
-  error = 0
+  total_error = 0
 
   for i in 0..(points.length-1)
-    x = points[i][0].to_f
-    y = points[i][1].to_f
-    error += (y-(m*x)+b)**2
+    total_error += (points[i][:y]-(m*points[i][:x])+b)**2
   end
 
-  return error/points.length
+  return total_error/points.length
 end
 
 def gradient_descent(points, init_m, init_b, learning_rate, iterations)
@@ -29,23 +27,17 @@ end
 def step_gradient(m_current, b_current, points, learning_rate)
   m_gradient = 0
   b_gradient = 0
+  n = points.length
 
-  for i in 0..(points.length-1)
-    x = points[i][0].to_f
-    y = points[i][1].to_f
-
-    m_gradient += -(2.0/points.length) * x * (y-hypothesis(m_current,b_current,x))
-    b_gradient += -(2.0/points.length) * (y-hypothesis(m_current,b_current,x))
+  for i in 0..(n-1)
+    b_gradient += -(2.0/n) * (points[i][:y] - (m_current * points[i][:x]) + b_current)
+    m_gradient += -(2.0/n) * points[i][:x] * (points[i][:y] - (m_current * points[i][:x]) + b_current)
   end
 
   return [
     m_current - (learning_rate * m_gradient),
     b_current - (learning_rate * b_gradient)
    ]
-end
-
-def hypothesis(m, b, x)
-  (m*x)+b
 end
 
 def gnuplot(commands)
@@ -57,7 +49,7 @@ def plot_results(csv_path, m, b, errors)
     for i in 0..10
       io.write(i)
       io.write(",")
-      io.write(hypothesis(m, b, i))
+      io.write((m*i)+b)
       io.write("\r\n")
     end
   end
@@ -85,13 +77,19 @@ def plot_results(csv_path, m, b, errors)
 
   gnuplot(commands)
   gnuplot(error_command)
+
+  File.delete("line.csv")
+  File.delete("error.csv")
 end
 
-points = CSV.read("salary_data.csv")
+file = "salary_data.csv"
+
+points = CSV.read(file)
 points.shift(1)
+points = points.collect{|point| {x: point[0].to_f, y: point[1].to_f}}
 
 init_m = 0
 init_b = 0
 
 final_m, final_b, errors = gradient_descent(points, init_m, init_b, 0.0001, 1000)
-plot_results("salary_data.csv", final_m, final_b, errors)
+plot_results(file, final_m, final_b, errors)
