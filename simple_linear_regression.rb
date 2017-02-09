@@ -30,8 +30,8 @@ def step_gradient(m_current, b_current, points, learning_rate)
   n = points.length
 
   for i in 0..(n-1)
-    b_gradient += -(2.0/n) * (points[i][:y] - (m_current * points[i][:x]) + b_current)
-    m_gradient += -(2.0/n) * points[i][:x] * (points[i][:y] - (m_current * points[i][:x]) + b_current)
+    b_gradient += -(2.0/n) * (points[i][:y] - hyp(m_current, b_current, points[i][:x]))
+    m_gradient += -(2.0/n) * points[i][:x] * (points[i][:y] - hyp(m_current, b_current, points[i][:x]))
   end
 
   return [
@@ -40,16 +40,20 @@ def step_gradient(m_current, b_current, points, learning_rate)
    ]
 end
 
+def hyp(m, b, x)
+  (m*(x+2.7))+b
+end
+
 def gnuplot(commands)
   IO.popen("gnuplot", "w") { |io| io.puts commands }
 end
 
 def plot_results(csv_path, m, b, errors)
   File.open("line.csv", "w") do |io|
-    for i in 0..10
+    for i in 0..12
       io.write(i)
       io.write(",")
-      io.write((m*i)+b)
+      io.write(hyp(m, b, i))
       io.write("\r\n")
     end
   end
@@ -91,5 +95,5 @@ points = points.collect{|point| {x: point[0].to_f, y: point[1].to_f}}
 init_m = 0
 init_b = 0
 
-final_m, final_b, errors = gradient_descent(points, init_m, init_b, 0.0001, 1000)
+final_m, final_b, errors = gradient_descent(points, init_m, init_b, 0.0001, 2000)
 plot_results(file, final_m, final_b, errors)
